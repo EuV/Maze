@@ -5,8 +5,8 @@ import java.util.Random;
 /**
  * Needed to create a random maze.
  */
-public abstract class RandomMazeMaker {
-	static final Random rand = new Random();
+abstract class RandomMazeMaker {
+	private static final Random rand = new Random();
 
 	/**
 	 * Recursive backtracker algorithm.
@@ -19,7 +19,7 @@ public abstract class RandomMazeMaker {
 	 */
 	public static void carvePassage( Field field, Position pos ) throws InterruptedException {
 
-		field.cells[ pos.row ][ pos.col ].state = State.MARKED;
+		field.cells[ pos.row ][ pos.col ].state = Cell.State.MARKED;
 
 		field.repaint();
 		field.sleep();
@@ -28,17 +28,19 @@ public abstract class RandomMazeMaker {
 			int nextRow = pos.row;
 			int nextCol = pos.col;
 
+
+			boolean topOK = isBlock( field.cells, pos.row - 1, pos.col );
+			boolean bottomOK = isBlock( field.cells, pos.row + 1, pos.col );
+			boolean leftOK = isBlock( field.cells, pos.row, pos.col - 1 );
+			boolean rightOK = isBlock( field.cells, pos.row, pos.col + 1 );
+
 			// if (random) AND there are at least one suitable vertical neighbor
-			// or if there are no horizontal suitable neighbors
-			if( rand.nextBoolean() &&
-					( isBlock( field.cells, pos.row - 1, pos.col ) || isBlock( field.cells, pos.row + 1, pos.col ) ) ||
-					!( isBlock( field.cells, pos.row, pos.col - 1 ) ||
-							isBlock( field.cells, pos.row, pos.col + 1 ) ) ) {
+			// or if there are no suitable horizontal neighbors
+			if( rand.nextBoolean() && ( topOK || bottomOK ) || !( leftOK || rightOK ) ) {
 
 				// if (random) AND if the state of the bottom cell is 'BLOCK'
 				// or if the top cell has already been carved
-				if( rand.nextBoolean() && isBlock( field.cells, pos.row + 1, pos.col ) ||
-						!isBlock( field.cells, pos.row - 1, pos.col ) ) {
+				if( rand.nextBoolean() && bottomOK || !topOK ) {
 					nextRow++;
 					field.cells[ pos.row ][ pos.col ].bottomWall = false;
 					field.cells[ nextRow ][ pos.col ].topWall = false;
@@ -51,8 +53,7 @@ public abstract class RandomMazeMaker {
 
 				// if (random) AND if the state of the right cell is 'BLOCK'
 				// or if the left cell has already been carved
-				if( rand.nextBoolean() && isBlock( field.cells, pos.row, pos.col + 1 ) ||
-						!isBlock( field.cells, pos.row, pos.col - 1 ) ) {
+				if( rand.nextBoolean() && rightOK || !leftOK ) {
 					nextCol++;
 					field.cells[ pos.row ][ pos.col ].rightWall = false;
 					field.cells[ pos.row ][ nextCol ].leftWall = false;
@@ -66,7 +67,7 @@ public abstract class RandomMazeMaker {
 			carvePassage( field, new Position( nextRow, nextCol ) );
 		}
 
-		field.cells[ pos.row ][ pos.col ].state = State.PASSAGE;
+		field.cells[ pos.row ][ pos.col ].state = Cell.State.PASSAGE;
 
 		field.repaint();
 		field.sleep();
@@ -78,13 +79,13 @@ public abstract class RandomMazeMaker {
 	 *
 	 * @param cells cell array
 	 * @param pos   the position of the cell to be checked
-	 * @return
+	 * @return true if a suitable cell was found, false otherwise
 	 */
 	private static boolean hasNextBlockCell( Cell[][] cells, Position pos ) {
-		return ( pos.col - 1 >= 0 && cells[ pos.row ][ pos.col - 1 ].state == State.BLOCK ) ||
-				( pos.col + 1 < Setup.MAZE_COL && cells[ pos.row ][ pos.col + 1 ].state == State.BLOCK ) ||
-				( pos.row - 1 >= 0 && cells[ pos.row - 1 ][ pos.col ].state == State.BLOCK ) ||
-				( pos.row + 1 < Setup.MAZE_ROW && cells[ pos.row + 1 ][ pos.col ].state == State.BLOCK );
+		return isBlock( cells, pos.row - 1, pos.col ) ||
+				isBlock( cells, pos.row + 1, pos.col ) ||
+				isBlock( cells, pos.row, pos.col - 1 ) ||
+				isBlock( cells, pos.row, pos.col + 1 );
 	}
 
 
@@ -96,9 +97,9 @@ public abstract class RandomMazeMaker {
 	 * @param col   the column to be checked
 	 */
 	private static boolean isBlock( Cell[][] cells, int row, int col ) {
-		return row >= 0 && row < Setup.MAZE_ROW &&
-				col >= 0 && col < Setup.MAZE_COL &&
-				cells[ row ][ col ].state == State.BLOCK;
+		return row >= 0 && row < Field.ROW &&
+				col >= 0 && col < Field.COL &&
+				cells[ row ][ col ].state == Cell.State.BLOCK;
 	}
 
 
@@ -111,30 +112,32 @@ public abstract class RandomMazeMaker {
 	 * @param field the labyrinth
 	 * @throws InterruptedException
 	 */
-	public static void addExtraGates( Field field ) throws InterruptedException {
+	static void addExtraGates( Field field ) throws InterruptedException {
 		Cell[][] cells = field.cells;
 		for( int i = 0; i < field.mainWindow.getNumberOfGates(); i++ ) {
+
 			Position p = new Position( true );
-			if( cells[ p.row ][ p.col ].rightWall &&
-					( cells[ p.row ][ p.col ].topWall ||
-							cells[ p.row - 1 ][ p.col ].rightWall ||
-							cells[ p.row ][ p.col + 1 ].topWall ) &&
-					( cells[ p.row ][ p.col ].bottomWall ||
-							cells[ p.row + 1 ][ p.col ].rightWall ||
-							cells[ p.row ][ p.col + 1 ].bottomWall ) ) {
+			boolean topBorder = cells[ p.row ][ p.col ].topWall ||
+					cells[ p.row - 1 ][ p.col ].rightWall ||
+					cells[ p.row ][ p.col + 1 ].topWall;
+			boolean bottomBorder = cells[ p.row ][ p.col ].bottomWall ||
+					cells[ p.row + 1 ][ p.col ].rightWall ||
+					cells[ p.row ][ p.col + 1 ].bottomWall;
+			if( cells[ p.row ][ p.col ].rightWall && topBorder && bottomBorder ) {
 				cells[ p.row ][ p.col ].rightWall = false;
 				cells[ p.row ][ p.col + 1 ].leftWall = false;
 				field.repaint();
 				field.sleep();
 			}
+
 			p = new Position( true );
-			if( cells[ p.row ][ p.col ].bottomWall &&
-					( cells[ p.row ][ p.col ].leftWall ||
-							cells[ p.row ][ p.col - 1 ].bottomWall ||
-							cells[ p.row + 1 ][ p.col ].leftWall ) &&
-					( cells[ p.row ][ p.col ].rightWall ||
-							cells[ p.row ][ p.col + 1 ].bottomWall ||
-							cells[ p.row + 1 ][ p.col ].rightWall ) ) {
+			boolean leftBorder = cells[ p.row ][ p.col ].leftWall ||
+					cells[ p.row ][ p.col - 1 ].bottomWall ||
+					cells[ p.row + 1 ][ p.col ].leftWall;
+			boolean rightBorder = cells[ p.row ][ p.col ].rightWall ||
+					cells[ p.row ][ p.col + 1 ].bottomWall ||
+					cells[ p.row + 1 ][ p.col ].rightWall;
+			if( cells[ p.row ][ p.col ].bottomWall && leftBorder && rightBorder ) {
 				cells[ p.row ][ p.col ].bottomWall = false;
 				cells[ p.row + 1 ][ p.col ].topWall = false;
 				field.repaint();
@@ -155,8 +158,8 @@ public abstract class RandomMazeMaker {
 			field.goal = new Position( false );
 		}
 
-		field.cells[ field.start.row ][ field.start.col ].state = State.START;
-		field.cells[ field.goal.row ][ field.goal.col ].state = State.GOAL;
+		field.cells[ field.start.row ][ field.start.col ].state = Cell.State.START;
+		field.cells[ field.goal.row ][ field.goal.col ].state = Cell.State.GOAL;
 		field.repaint();
 	}
 }

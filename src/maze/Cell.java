@@ -1,36 +1,13 @@
 package maze;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-
-/**
- * Determines the state of a cell which is used during the visualisation.
- * <p> <code>BLOCK</code> by default - a blocked cell with all the walls.
- * <p> <code>MARKED</code> - a marked cell (during the maze generation).
- * <p> <code>PASSAGE</code> - an open for the passage cell. In this state
- * it isn't necessary but it's assumed that there isn't at least one cell wall.
- * <p> <code>START</code> - the source of the maze.
- * <p> <code>GOAL</code> - the destination of the maze.
- * <p> <code>ACHIEVED_GOAL</code> - the reached destination of the maze.
- * <p> <code>A_OPEN</code> - a cell in the open set (A*).
- * <p> <code>A_CLOSED</code> - a cell in the closed set (A*).
- */
-enum State { BLOCK, MARKED, PASSAGE, START, GOAL, ACHIEVED_GOAL, A_OPEN, A_CLOSED }
-
-
-/**
- * Describes the direction between start and goal cells which is marked on cells.
- */
-enum Direction { UP, DOWN, LEFT, RIGHT }
+import java.awt.*;
 
 
 /**
  * The Cell class.
  * <p> Contains all the data needed to calculate and render a cell.
  */
-public class Cell implements Comparable<Cell> {
+class Cell implements Comparable<Cell> {
 
 	// Public changeable data
 	Position pos;
@@ -61,8 +38,9 @@ public class Cell implements Comparable<Cell> {
 
 	/**
 	 * Creates a new cell in the specified position.
-	 * @param row the row number (between 0 (inclusive) and MAZE_ROW (exclusive))
-	 * @param col the column number (between 0 (inclusive) and MAZE_COL (exclusive))
+	 *
+	 * @param row the row number (between 0 (inclusive) and ROW (exclusive))
+	 * @param col the column number (between 0 (inclusive) and COL (exclusive))
 	 */
 	Cell( int row, int col ) {
 		pos = new Position( row, col );
@@ -73,9 +51,10 @@ public class Cell implements Comparable<Cell> {
 
 	/**
 	 * Creates a new cell with the specified state and position.
-	 * @param row the row number (between 0 (inclusive) and MAZE_ROW (exclusive))
-	 * @param col the column number (between 0 (inclusive) and MAZE_COL (exclusive))
-	 * @param state
+	 *
+	 * @param row   the row number (between 0 (inclusive) and ROW (exclusive))
+	 * @param col   the column number (between 0 (inclusive) and COL (exclusive))
+	 * @param state cell state
 	 */
 	Cell( int row, int col, State state ) {
 		this( row, col );
@@ -97,6 +76,7 @@ public class Cell implements Comparable<Cell> {
 
 	/**
 	 * Paints a cell using the internal data.
+	 *
 	 * @param g parent's Graphics context
 	 */
 	void paint( Graphics g ) {
@@ -104,7 +84,7 @@ public class Cell implements Comparable<Cell> {
 		g2.setStroke( new BasicStroke( 1 ) );
 
 		switch( state ) {
-			case BLOCK :
+			case BLOCK:
 				g.setColor( Color.LIGHT_GRAY );
 				break;
 			case MARKED:
@@ -149,14 +129,18 @@ public class Cell implements Comparable<Cell> {
 			g.fillRect( x + width, y + height, 1, 1 );
 		}
 
-		if( dirGoal == null && dirStart == null) return;
+		if( dirGoal == null && dirStart == null ) return;
 
 		g.setColor( new Color( 255, 100, 0 ) );
 		g2.setStroke( new BasicStroke( 3 ) );
-		if( dirGoal == Direction.LEFT || dirStart == Direction.LEFT ) g.drawLine( x, y + width / 2, x + width / 2, y + width / 2 );
-		if( dirGoal == Direction.RIGHT || dirStart == Direction.RIGHT ) g.drawLine( x + width / 2, y + width / 2, x + width, y + width / 2 );
-		if( dirGoal == Direction.UP || dirStart == Direction.UP ) g.drawLine( x + width / 2, y, x + width / 2, y + width / 2 );
-		if( dirGoal == Direction.DOWN || dirStart == Direction.DOWN ) g.drawLine( x + width / 2, y + width / 2, x + width / 2, y + width );
+		if( dirGoal == Direction.LEFT || dirStart == Direction.LEFT )
+			g.drawLine( x, y + width / 2, x + width / 2, y + width / 2 );
+		if( dirGoal == Direction.RIGHT || dirStart == Direction.RIGHT )
+			g.drawLine( x + width / 2, y + width / 2, x + width, y + width / 2 );
+		if( dirGoal == Direction.UP || dirStart == Direction.UP )
+			g.drawLine( x + width / 2, y, x + width / 2, y + width / 2 );
+		if( dirGoal == Direction.DOWN || dirStart == Direction.DOWN )
+			g.drawLine( x + width / 2, y + width / 2, x + width / 2, y + width );
 	}
 
 
@@ -165,12 +149,32 @@ public class Cell implements Comparable<Cell> {
 	 */
 	@Override
 	public int compareTo( Cell other ) {
-		if( this.f > other.f ){
-			return 1;
-		}
-		if( this.f < other.f ){
-			return -1;
-		}
+		if( this.f > other.f ) return 1;
+		if( this.f < other.f ) return -1;
 		return 0;
+	}
+
+	/**
+	 * Determines the state of a cell which is used during the visualisation.
+	 * <p> <code>BLOCK</code> by default - a blocked cell with all the walls.
+	 * <p> <code>MARKED</code> - a marked cell (during the maze generation).
+	 * <p> <code>PASSAGE</code> - an open for the passage cell. In this state
+	 * it isn't necessary but it's assumed that there isn't at least one cell wall.
+	 * <p> <code>START</code> - the source of the maze.
+	 * <p> <code>GOAL</code> - the destination of the maze.
+	 * <p> <code>ACHIEVED_GOAL</code> - the reached destination of the maze.
+	 * <p> <code>A_OPEN</code> - a cell in the open set (A*).
+	 * <p> <code>A_CLOSED</code> - a cell in the closed set (A*).
+	 */
+	static enum State {
+		BLOCK, MARKED, PASSAGE, START, GOAL, ACHIEVED_GOAL, A_OPEN, A_CLOSED
+	}
+
+
+	/**
+	 * Describes the direction between start and goal cells which is marked on cells.
+	 */
+	static enum Direction {
+		UP, DOWN, LEFT, RIGHT
 	}
 }

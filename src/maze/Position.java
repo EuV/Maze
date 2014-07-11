@@ -5,20 +5,20 @@ import java.util.Random;
 /**
  * The cell position.
  */
-public class Position {
-	static final Random rand = new Random();
+class Position {
+	private static final Random rand = new Random();
 	int row;
 	int col;
 
 
 	/**
-	 * Creates a new random position with or without 1-cell indent.
+	 * Creates a new random position with or without indent.
 	 *
-	 * @param indent
+	 * @param indent 1-cell indent
 	 */
 	Position( boolean indent ) {
-		row = ( indent ) ? 1 + rand.nextInt( Setup.MAZE_ROW - 2 ) : rand.nextInt( Setup.MAZE_ROW );
-		col = ( indent ) ? 1 + rand.nextInt( Setup.MAZE_COL - 2 ) : rand.nextInt( Setup.MAZE_COL );
+		row = ( indent ) ? 1 + rand.nextInt( Field.ROW - 2 ) : rand.nextInt( Field.ROW );
+		col = ( indent ) ? 1 + rand.nextInt( Field.COL - 2 ) : rand.nextInt( Field.COL );
 	}
 
 

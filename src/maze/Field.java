@@ -1,17 +1,7 @@
 package maze;
 
-import javax.swing.*;
-import java.awt.*;
-
-
-/**
- * Determines the global state of the program which is used during its running.
- * <p> May be either <code>GENERATION</code> of a new random maze or
- * <code>PATHFINDING</code>
- */
-enum GlobalState {
-	GENERATION, PATHFINDING
-}
+import javax.swing.JPanel;
+import java.awt.Graphics;
 
 
 /**
@@ -19,26 +9,33 @@ enum GlobalState {
  * <p> Contains cell array and initializes their rendering.
  * <p> Responds to the main window calls.
  */
-public class Field extends JPanel implements Runnable {
-	final MainWindow mainWindow;
-	final Cell cells[][] = new Cell[ Setup.MAZE_ROW ][ Setup.MAZE_COL ];
+class Field extends JPanel implements Runnable {
+	final MainWindow mainWindow; // TODO: callbacks
+	final Cell cells[][];
+	static int ROW;
+	static int COL;
 
 	Position start = null;
 	Position goal = null;
 
-	private GlobalState gState = GlobalState.GENERATION;
+	private FState fState = FState.GENERATION;
 	private Thread thread = new Thread( this );
 
 
 	/**
 	 * Creates a new Field with cell array initialised by the default cell's state.
 	 *
-	 * @param parentMainWindow the link to the parent to save
+	 * @param mainWindow the link to the parent to save
+	 * @param totalRow   the total number of rows in the maze
+	 * @param totalCol   the total number of columns in the maze
 	 */
-	Field( MainWindow parentMainWindow ) {
-		mainWindow = parentMainWindow;
-		for( int row = 0; row < Setup.MAZE_ROW; row++ ) {
-			for( int col = 0; col < Setup.MAZE_COL; col++ ) {
+	Field( MainWindow mainWindow, int totalRow, int totalCol ) {
+		ROW = totalRow;
+		COL = totalCol;
+		cells = new Cell[ ROW ][ COL ];
+		this.mainWindow = mainWindow;
+		for( int row = 0; row < ROW; row++ ) {
+			for( int col = 0; col < COL; col++ ) {
 				cells[ row ][ col ] = new Cell( row, col );
 			}
 		}
@@ -53,8 +50,8 @@ public class Field extends JPanel implements Runnable {
 	@Override
 	public void paintComponent( Graphics g ) {
 		super.paintComponent( g );
-		for( int row = 0; row < Setup.MAZE_ROW; row++ ) {
-			for( int col = 0; col < Setup.MAZE_COL; col++ ) {
+		for( int row = 0; row < ROW; row++ ) {
+			for( int col = 0; col < COL; col++ ) {
 				cells[ row ][ col ].paint( g );
 			}
 		}
@@ -67,8 +64,8 @@ public class Field extends JPanel implements Runnable {
 	@Override
 	public void run() {
 		try {
-			if( gState == GlobalState.GENERATION ) {
-				if( Setup.MAZE_ROW < 3 || Setup.MAZE_ROW < 3 ) {
+			if( fState == FState.GENERATION ) {
+				if( ROW < 3 || COL < 3 ) {
 					return;
 				}
 				RandomMazeMaker.carvePassage( this, new Position( false ) );
@@ -79,7 +76,7 @@ public class Field extends JPanel implements Runnable {
 					mainWindow.setPathLength( "" + cells[ goal.row ][ goal.col ].g );
 				}
 			}
-		} catch( InterruptedException e ) {}
+		} catch( InterruptedException ignored ) {}
 	}
 
 
@@ -90,15 +87,15 @@ public class Field extends JPanel implements Runnable {
 	 * @param mapNumber the number of the map to be shown
 	 */
 	void showTestMap( int mapNumber ) {
-		if( Setup.MAZE_ROW < 25 || Setup.MAZE_ROW < 25 ) {
+		if( ROW < 25 || ROW < 25 ) {
 			return;
 		}
 		if( thread.isAlive() ) {
 			thread.interrupt();
 		}
-		for( int row = 0; row < Setup.MAZE_ROW; row++ ) {
-			for( int col = 0; col < Setup.MAZE_COL; col++ ) {
-				cells[ row ][ col ] = new Cell( row, col, State.PASSAGE );
+		for( int row = 0; row < ROW; row++ ) {
+			for( int col = 0; col < COL; col++ ) {
+				cells[ row ][ col ] = new Cell( row, col, Cell.State.PASSAGE );
 			}
 		}
 		switch( mapNumber ) {
@@ -123,10 +120,10 @@ public class Field extends JPanel implements Runnable {
 		}
 
 		start = new Position( 15, 7 );
-		cells[ start.row ][ start.col ].state = State.START;
+		cells[ start.row ][ start.col ].state = Cell.State.START;
 
 		goal = new Position( 15, 23 );
-		cells[ goal.row ][ goal.col ].state = State.GOAL;
+		cells[ goal.row ][ goal.col ].state = Cell.State.GOAL;
 
 		repaint();
 	}
@@ -141,12 +138,12 @@ public class Field extends JPanel implements Runnable {
 		if( thread.isAlive() ) {
 			thread.interrupt();
 		}
-		for( int row = 0; row < Setup.MAZE_ROW; row++ ) {
-			for( int col = 0; col < Setup.MAZE_COL; col++ ) {
+		for( int row = 0; row < ROW; row++ ) {
+			for( int col = 0; col < COL; col++ ) {
 				cells[ row ][ col ] = new Cell( row, col );
 			}
 		}
-		gState = GlobalState.GENERATION;
+		fState = FState.GENERATION;
 		thread = new Thread( this );
 		thread.start();
 	}
@@ -160,23 +157,23 @@ public class Field extends JPanel implements Runnable {
 	void findPath() {
 		if( start == null || goal == null ) return;
 		if( thread.isAlive() ) {
-			if( gState == GlobalState.GENERATION ) {
+			if( fState == FState.GENERATION ) {
 				return;
 			} else {
 				thread.interrupt();
 			}
 		}
-		for( int row = 0; row < Setup.MAZE_ROW; row++ ) {
-			for( int col = 0; col < Setup.MAZE_COL; col++ ) {
-				cells[ row ][ col ].state = State.PASSAGE;
+		for( int row = 0; row < ROW; row++ ) {
+			for( int col = 0; col < COL; col++ ) {
+				cells[ row ][ col ].state = Cell.State.PASSAGE;
 				cells[ row ][ col ].dirStart = null;
 				cells[ row ][ col ].dirGoal = null;
 			}
 		}
-		cells[ start.row ][ start.col ].state = State.START;
-		cells[ goal.row ][ goal.col ].state = State.GOAL;
+		cells[ start.row ][ start.col ].state = Cell.State.START;
+		cells[ goal.row ][ goal.col ].state = Cell.State.GOAL;
 
-		gState = GlobalState.PATHFINDING;
+		fState = FState.PATHFINDING;
 		thread = new Thread( this );
 		thread.start();
 	}
@@ -188,8 +185,17 @@ public class Field extends JPanel implements Runnable {
 	 * @throws InterruptedException
 	 */
 	void sleep() throws InterruptedException {
-		int animationTime = mainWindow.getAnimationSpeed( gState );
-		long delay = ( long ) ( Math.pow( 2, Setup.ANIMATION_INSTANT - animationTime ) - 1 );
+		int animationTime = mainWindow.getAnimationSpeed( fState );
+		long delay = ( long ) ( Math.pow( 2, 10 - animationTime ) - 1 );
 		if( delay > 0 ) Thread.sleep( delay );
+	}
+
+	/**
+	 * Determines the global state of the program which is used during its running.
+	 * <p> May be either <code>GENERATION</code> of a new random maze or
+	 * <code>PATHFINDING</code>
+	 */
+	static enum FState {
+		GENERATION, PATHFINDING
 	}
 }

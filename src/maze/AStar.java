@@ -11,7 +11,7 @@ import java.util.Queue;
  * <a href="http://en.wikipedia.org/wiki/A*_search_algorithm">Wikipedia</a> and
  * <a href="http://www.policyalmanac.org/games/aStarTutorial.htm">A* Pathfinding for Beginners</a>
  */
-public abstract class AStar {
+abstract class AStar {
 
 	/**
 	 * The A star algorithm.
@@ -21,42 +21,41 @@ public abstract class AStar {
 	 * false otherwise.
 	 * @throws InterruptedException
 	 */
-	public static boolean findPath( Field field ) throws InterruptedException {
+	static boolean findPath( Field field ) throws InterruptedException {
 
-		boolean pathFound = false;
+		boolean pathWasFound = false;
 
 		Queue<Cell> openSet = new PriorityQueue<>();
 		openSet.add( field.cells[ field.start.row ][ field.start.col ] );
 
 		while( !openSet.isEmpty() ) {
-			Cell currentCell = openSet.poll();
+			Cell cell = openSet.poll();
 
 			List<Position> neighbors = new ArrayList<>();
 
-			if( !currentCell.topWall ) neighbors.add( new Position( currentCell.pos.row - 1, currentCell.pos.col ) );
-			if( !currentCell.leftWall ) neighbors.add( new Position( currentCell.pos.row, currentCell.pos.col - 1 ) );
-			if( !currentCell.rightWall ) neighbors.add( new Position( currentCell.pos.row, currentCell.pos.col + 1 ) );
-			if( !currentCell.bottomWall ) neighbors.add( new Position( currentCell.pos.row + 1,
-					currentCell.pos.col ) );
+			if( !cell.topWall ) neighbors.add( new Position( cell.pos.row - 1, cell.pos.col ) );
+			if( !cell.leftWall ) neighbors.add( new Position( cell.pos.row, cell.pos.col - 1 ) );
+			if( !cell.rightWall ) neighbors.add( new Position( cell.pos.row, cell.pos.col + 1 ) );
+			if( !cell.bottomWall ) neighbors.add( new Position( cell.pos.row + 1, cell.pos.col ) );
 
 			for( Position newPosition : neighbors ) {
-				tryToAddToOpenSet( openSet, currentCell, newPosition, field );
+				tryToAddToOpenSet( openSet, cell, newPosition, field );
 			}
 
-			if( currentCell.state != State.START ) {
-				currentCell.state = State.A_CLOSED;
+			if( cell.state != Cell.State.START ) {
+				cell.state = Cell.State.A_CLOSED;
 			}
 
 			field.repaint();
 			field.sleep();
 
-			if( field.cells[ field.goal.row ][ field.goal.col ].state == State.ACHIEVED_GOAL ) {
-				pathFound = true;
+			if( field.cells[ field.goal.row ][ field.goal.col ].state == Cell.State.ACHIEVED_GOAL ) {
+				pathWasFound = true;
 				break;
 			}
 		}
 
-		if( !pathFound ) return false;
+		if( !pathWasFound ) return false;
 
 		reconstructPath( field );
 
@@ -65,29 +64,28 @@ public abstract class AStar {
 
 
 	/**
-	 * Tries to add the cell specified by the <code>pos</code> to the A* open set.
+	 * Tries to add the cell specified by the <code>p</code> to the A* open set.
 	 *
-	 * @param openSet
+	 * @param openSet the open set (A*)
 	 * @param parent  the parent cell to be saved in a child and to be used in g()
-	 * @param pos     the new position to be added to the open set
+	 * @param p       the new position to be added to the open set
 	 * @param field   the labyrinth
 	 */
-	private static void tryToAddToOpenSet( Queue<Cell> openSet, Cell parent, Position pos, Field field ) {
+	private static void tryToAddToOpenSet( Queue<Cell> openSet, Cell parent, Position p, Field field ) {
 
 		// Out of the maze bounds
-		if( pos.row < 0 || pos.row >= Setup.MAZE_ROW ||
-				pos.col < 0 || pos.col >= Setup.MAZE_COL ) {
+		if( p.row < 0 || p.row >= Field.ROW || p.col < 0 || p.col >= Field.COL ) {
 			return;
 		}
 
 		// Couldn't be added because of its state
-		if( field.cells[ pos.row ][ pos.col ].state == State.START ||
-				field.cells[ pos.row ][ pos.col ].state == State.BLOCK ||
-				field.cells[ pos.row ][ pos.col ].state == State.A_CLOSED ) {
+		if( field.cells[ p.row ][ p.col ].state == Cell.State.START ||
+				field.cells[ p.row ][ p.col ].state == Cell.State.BLOCK ||
+				field.cells[ p.row ][ p.col ].state == Cell.State.A_CLOSED ) {
 			return;
 		}
 
-		Cell openCell = field.cells[ pos.row ][ pos.col ];
+		Cell openCell = field.cells[ p.row ][ p.col ];
 
 		// Update the cell if it has already been added to the open set
 		if( openSet.remove( openCell ) ) {
@@ -98,16 +96,19 @@ public abstract class AStar {
 				openCell.parent = parent;
 			}
 		} else {
-			openCell.state = ( openCell.state == State.GOAL ) ? State.ACHIEVED_GOAL : State.A_OPEN;
+			openCell.state = ( openCell.state == Cell.State.GOAL ) ?
+					Cell.State.ACHIEVED_GOAL :
+					Cell.State.A_OPEN;
 			openCell.parent = parent;
 			openCell.g = parent.g + 1;
 
 			// Manhattan distance
-			openCell.h = Math.abs( field.goal.row - pos.row ) + Math.abs( field.goal.col - pos.col );
+			openCell.h = Math.abs( field.goal.row - p.row ) + Math.abs( field.goal.col - p.col );
 		}
 		openCell.f = openCell.g + openCell.h;
 		openSet.add( openCell );
 	}
+
 
 	/**
 	 * Reconstructs the path joining the start and the goal.
@@ -119,17 +120,17 @@ public abstract class AStar {
 		Cell stage = field.cells[ field.goal.row ][ field.goal.col ];
 		while( stage.parent != null ) {
 			if( stage.parent.pos.col < stage.pos.col ) {
-				stage.parent.dirGoal = Direction.RIGHT;
-				stage.dirStart = Direction.LEFT;
+				stage.parent.dirGoal = Cell.Direction.RIGHT;
+				stage.dirStart = Cell.Direction.LEFT;
 			} else if( stage.parent.pos.col > stage.pos.col ) {
-				stage.parent.dirGoal = Direction.LEFT;
-				stage.dirStart = Direction.RIGHT;
+				stage.parent.dirGoal = Cell.Direction.LEFT;
+				stage.dirStart = Cell.Direction.RIGHT;
 			} else if( stage.parent.pos.row < stage.pos.row ) {
-				stage.parent.dirGoal = Direction.DOWN;
-				stage.dirStart = Direction.UP;
+				stage.parent.dirGoal = Cell.Direction.DOWN;
+				stage.dirStart = Cell.Direction.UP;
 			} else {
-				stage.parent.dirGoal = Direction.UP;
-				stage.dirStart = Direction.DOWN;
+				stage.parent.dirGoal = Cell.Direction.UP;
+				stage.dirStart = Cell.Direction.DOWN;
 			}
 			stage = stage.parent;
 			field.repaint();

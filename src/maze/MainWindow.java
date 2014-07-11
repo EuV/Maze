@@ -2,47 +2,46 @@ package maze;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.util.Hashtable;
 
+// TODO: scalable window
 public final class MainWindow {
-	private final static String pathLengthText = "Path length: ";
-
 	private final Field field;
 	private final JSlider mazeAnimation;
 	private final JSlider extraGates;
 	private final JSlider findPathAnimation;
 	private final JLabel pathLength;
 
-	MainWindow() {
-		field = new Field( this );
+	MainWindow( int totalRow, int totalCol ) {
+		field = new Field( this, totalRow, totalCol );
 
-		Hashtable labelTable = new Hashtable();
-		labelTable.put( Setup.ANIMATION_SLOW, new JLabel( "Slow" ) );
-		labelTable.put( Setup.ANIMATION_INSTANT, new JLabel( "Instant" ) );
-		
 		/* === MAZE WINDOW ================================================== */
 
 		// Button
 		JButton mazeGenerateBtn = new JButton( "Generate" );
 		mazeGenerateBtn.setPreferredSize( new Dimension( 100, 27 ) );
-		mazeGenerateBtn.addActionListener( ( ActionEvent ) -> {
+		mazeGenerateBtn.addActionListener( ActionEvent -> {
 			setPathLength( "" );
 			field.generateMaze();
 		} );
 
 		// Slider
-		mazeAnimation = new JSlider( JSlider.HORIZONTAL, Setup.ANIMATION_SLOW, Setup.ANIMATION_INSTANT,
-				Setup.ANIMATION_DEFAULT );
+		Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
+		labelTable.put( 0, new JLabel( "Slow" ) );
+		labelTable.put( 10, new JLabel( "Instant" ) );
+		mazeAnimation = new JSlider( JSlider.HORIZONTAL, 0, 10, 7 );
 		mazeAnimation.setPreferredSize( new Dimension( 130, 50 ) );
-		mazeAnimation.setMajorTickSpacing( Setup.ANIMATION_INSTANT / Setup.ANIMATION_TICK );
-		mazeAnimation.setMinorTickSpacing( Setup.ANIMATION_INSTANT / Setup.ANIMATION_TICK / 2 );
+		mazeAnimation.setMajorTickSpacing( 2 );
+		mazeAnimation.setMinorTickSpacing( 1 );
 		mazeAnimation.setPaintTicks( true );
 		mazeAnimation.setLabelTable( labelTable );
 		mazeAnimation.setPaintLabels( true );
 
 		// Gates
-		Hashtable labelTableGates = new Hashtable();
+		Hashtable<Integer, JLabel> labelTableGates = new Hashtable<>();
 		labelTableGates.put( 0, new JLabel( "No" ) );
 		labelTableGates.put( 100, new JLabel( "Plenty" ) );
 		extraGates = new JSlider( JSlider.HORIZONTAL, 0, 100, 10 );
@@ -70,11 +69,10 @@ public final class MainWindow {
 		/* === PATHFINDING WINDOW =========================================== */
 
 		// Slider
-		findPathAnimation = new JSlider( JSlider.HORIZONTAL, Setup.ANIMATION_SLOW, Setup.ANIMATION_INSTANT,
-				Setup.ANIMATION_DEFAULT );
+		findPathAnimation = new JSlider( JSlider.HORIZONTAL, 0, 10, 7 );
 		findPathAnimation.setPreferredSize( new Dimension( 130, 50 ) );
-		findPathAnimation.setMajorTickSpacing( Setup.ANIMATION_INSTANT / Setup.ANIMATION_TICK );
-		findPathAnimation.setMinorTickSpacing( Setup.ANIMATION_INSTANT / Setup.ANIMATION_TICK / 2 );
+		findPathAnimation.setMajorTickSpacing( 2 );
+		findPathAnimation.setMinorTickSpacing( 1 );
 		findPathAnimation.setPaintTicks( true );
 		findPathAnimation.setLabelTable( labelTable );
 		findPathAnimation.setPaintLabels( true );
@@ -82,7 +80,7 @@ public final class MainWindow {
 		// Button
 		JButton findPathBtn = new JButton( "Find Path" );
 		findPathBtn.setPreferredSize( new Dimension( 100, 27 ) );
-		findPathBtn.addActionListener( ( ActionEvent ) -> {
+		findPathBtn.addActionListener( ActionEvent -> {
 			setPathLength( "" );
 			field.findPath();
 		} );
@@ -98,7 +96,7 @@ public final class MainWindow {
 
 		/* === MAIN MENU ==================================================== */
 
-		pathLength = new JLabel( pathLengthText );
+		pathLength = new JLabel( "Path length:" );
 		pathLength.setPreferredSize( new Dimension( 100, 30 ) );
 
 		JPanel menu = new JPanel( new FlowLayout() );
@@ -110,7 +108,7 @@ public final class MainWindow {
 
 		JFrame mainWindow = new JFrame( "Maze" );
 		mainWindow.setSize( 827, 658 );
-		mainWindow.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		mainWindow.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );
 		mainWindow.setLocationRelativeTo( null );
 		mainWindow.setResizable( false );
 		mainWindow.add( menu, BorderLayout.EAST );
@@ -121,7 +119,7 @@ public final class MainWindow {
 	private JButton newTestMapBtn( String text, int i ) {
 		JButton btn = new JButton( text );
 		btn.setPreferredSize( new Dimension( 100, 27 ) );
-		btn.addActionListener( ( ActionEvent ) -> {
+		btn.addActionListener( ActionEvent -> {
 			setPathLength( "" );
 			field.showTestMap( i );
 		} );
@@ -135,16 +133,20 @@ public final class MainWindow {
 
 
 	void setPathLength( String length ) {
-		pathLength.setText( pathLengthText + length );
+		pathLength.setText( "Path length: " + length );
 	}
 
 
-	int getAnimationSpeed( GlobalState gState ) {
-		return ( gState == GlobalState.PATHFINDING ) ? findPathAnimation.getValue() : mazeAnimation.getValue();
+	int getAnimationSpeed( Field.FState fState ) {
+		return ( fState == Field.FState.PATHFINDING ) ?
+				findPathAnimation.getValue() :
+				mazeAnimation.getValue();
 	}
 
 
 	public static void main( String[] args ) {
-		new MainWindow();
+		// TODO: commandline arguments (row, col)
+		// TODO: check for max/min size (throw exception)
+		new MainWindow( 30, 30 );
 	}
 }
