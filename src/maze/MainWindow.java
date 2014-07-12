@@ -13,10 +13,24 @@ public final class MainWindow {
 	private final JSlider mazeAnimation;
 	private final JSlider extraGates;
 	private final JSlider findPathAnimation;
-	private final JLabel pathLength;
+	private final JLabel pathLengthVal;
 
 	MainWindow( int totalRow, int totalCol ) {
-		field = new Field( this, totalRow, totalCol );
+		field = new Field( totalRow, totalCol, new Callback() {
+			public void setPathLength( String length ) {
+				MainWindow.this.setPathLength( length );
+			}
+
+			public int getNumberOfGates() {
+				return extraGates.getValue();
+			}
+
+			public int getAnimationSpeed( Field.FState fState ) {
+				return ( fState == Field.FState.PATHFINDING ) ?
+						findPathAnimation.getValue() :
+						mazeAnimation.getValue();
+			}
+		} );
 
 		/* === MAZE WINDOW ================================================== */
 
@@ -65,7 +79,7 @@ public final class MainWindow {
 		mazeGeneratorWnd.add( new JLabel( "Extra gates:" ) );
 		mazeGeneratorWnd.add( extraGates );
 
-		
+
 		/* === PATHFINDING WINDOW =========================================== */
 
 		// Slider
@@ -92,12 +106,15 @@ public final class MainWindow {
 		findPathWnd.add( findPathBtn );
 		findPathWnd.add( new JLabel( "Animation speed:" ) );
 		findPathWnd.add( findPathAnimation );
-		
+
 
 		/* === MAIN MENU ==================================================== */
 
-		pathLength = new JLabel( "Path length:" );
-		pathLength.setPreferredSize( new Dimension( 100, 30 ) );
+		JLabel pathLength = new JLabel( "Path length:" );
+		pathLength.setPreferredSize( new Dimension( 70, 30 ) );
+
+		pathLengthVal = new JLabel();
+		pathLengthVal.setPreferredSize( new Dimension( 40, 30 ) );
 
 		JPanel menu = new JPanel( new FlowLayout() );
 		menu.setPreferredSize( new Dimension( 190, 658 ) );
@@ -105,6 +122,7 @@ public final class MainWindow {
 		menu.add( mazeGeneratorWnd );
 		menu.add( findPathWnd );
 		menu.add( pathLength );
+		menu.add( pathLengthVal );
 
 		JFrame mainWindow = new JFrame( "Maze" );
 		mainWindow.setSize( 827, 658 );
@@ -116,6 +134,8 @@ public final class MainWindow {
 		mainWindow.setVisible( true );
 	}
 
+
+	// TODO: button-factory
 	private JButton newTestMapBtn( String text, int i ) {
 		JButton btn = new JButton( text );
 		btn.setPreferredSize( new Dimension( 100, 27 ) );
@@ -127,20 +147,15 @@ public final class MainWindow {
 	}
 
 
-	int getNumberOfGates() {
-		return extraGates.getValue();
+	private void setPathLength( String length ) {
+		pathLengthVal.setText( length );
 	}
 
 
-	void setPathLength( String length ) {
-		pathLength.setText( "Path length: " + length );
-	}
-
-
-	int getAnimationSpeed( Field.FState fState ) {
-		return ( fState == Field.FState.PATHFINDING ) ?
-				findPathAnimation.getValue() :
-				mazeAnimation.getValue();
+	static interface Callback {
+		void setPathLength( String length );
+		int getNumberOfGates();
+		int getAnimationSpeed( Field.FState fState );
 	}
 
 

@@ -10,7 +10,7 @@ import java.awt.Graphics;
  * <p> Responds to the main window calls.
  */
 class Field extends JPanel implements Runnable {
-	final MainWindow mainWindow; // TODO: callbacks
+	final MainWindow.Callback mainWndCallback;
 	final Cell cells[][];
 	static int ROW;
 	static int COL;
@@ -25,15 +25,15 @@ class Field extends JPanel implements Runnable {
 	/**
 	 * Creates a new Field with cell array initialised by the default cell's state.
 	 *
-	 * @param mainWindow the link to the parent to save
-	 * @param totalRow   the total number of rows in the maze
-	 * @param totalCol   the total number of columns in the maze
+	 * @param totalRow the total number of rows in the maze
+	 * @param totalCol the total number of columns in the maze
+	 * @param callback object for communication with the main window
 	 */
-	Field( MainWindow mainWindow, int totalRow, int totalCol ) {
+	Field( int totalRow, int totalCol, MainWindow.Callback callback ) {
+		mainWndCallback = callback;
 		ROW = totalRow;
 		COL = totalCol;
 		cells = new Cell[ ROW ][ COL ];
-		this.mainWindow = mainWindow;
 		for( int row = 0; row < ROW; row++ ) {
 			for( int col = 0; col < COL; col++ ) {
 				cells[ row ][ col ] = new Cell( row, col );
@@ -73,7 +73,7 @@ class Field extends JPanel implements Runnable {
 				RandomMazeMaker.setStartAndGoal( this );
 			} else {
 				if( AStar.findPath( this ) ) {
-					mainWindow.setPathLength( "" + cells[ goal.row ][ goal.col ].g );
+					mainWndCallback.setPathLength( "" + cells[ goal.row ][ goal.col ].g );
 				}
 			}
 		} catch( InterruptedException ignored ) {}
@@ -185,7 +185,7 @@ class Field extends JPanel implements Runnable {
 	 * @throws InterruptedException
 	 */
 	void sleep() throws InterruptedException {
-		int animationTime = mainWindow.getAnimationSpeed( fState );
+		int animationTime = mainWndCallback.getAnimationSpeed( fState );
 		long delay = ( long ) ( Math.pow( 2, 10 - animationTime ) - 1 );
 		if( delay > 0 ) Thread.sleep( delay );
 	}

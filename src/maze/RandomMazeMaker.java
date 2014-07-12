@@ -114,7 +114,7 @@ abstract class RandomMazeMaker {
 	 */
 	static void addExtraGates( Field field ) throws InterruptedException {
 		Cell[][] cells = field.cells;
-		for( int i = 0; i < field.mainWindow.getNumberOfGates(); i++ ) {
+		for( int i = 0; i < field.mainWndCallback.getNumberOfGates(); i++ ) {
 
 			Position p = new Position( true );
 			boolean topBorder = cells[ p.row ][ p.col ].topWall ||
