@@ -7,7 +7,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.Hashtable;
 
-// TODO: scalable window
 public final class MainWindow {
 	private final Field field;
 	private final JLabel pathLengthVal;
@@ -112,7 +111,8 @@ public final class MainWindow {
 		/* === MAIN WINDOW ================================================== */
 
 		JFrame mainWindow = new JFrame( "Maze" );
-		mainWindow.setSize( 827, 658 );
+		mainWindow.setSize( 197 + totalCol * ( Cell.WIDTH + 1 ),
+				Math.max( 28 + totalRow * ( Cell.HEIGHT + 1 ), 520 ) );
 		mainWindow.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );
 		mainWindow.setLocationRelativeTo( null );
 		mainWindow.setResizable( false );

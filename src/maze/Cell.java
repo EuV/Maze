@@ -28,10 +28,10 @@ class Cell implements Comparable<Cell> {
 	Direction dirGoal = null;
 
 	// Used when drawing
+	static final int WIDTH = 20;
+	static final int HEIGHT = 20;
 	private boolean sharpCorners = true;
 	private boolean outline = false;
-	private final int width = 20;
-	private final int height = 20;
 	private final int x; // Just for short:
 	private final int y; // not to calculate them each time
 
@@ -44,8 +44,8 @@ class Cell implements Comparable<Cell> {
 	 */
 	Cell( int row, int col ) {
 		pos = new Position( row, col );
-		x = pos.col * ( width + 1 );
-		y = pos.row * ( height + 1 );
+		x = pos.col * ( WIDTH + 1 );
+		y = pos.row * ( HEIGHT + 1 );
 	}
 
 
@@ -110,23 +110,23 @@ class Cell implements Comparable<Cell> {
 				g.setColor( Color.CYAN );
 				break;
 		}
-		g.fillRect( x, y, width + 1, height + 1 );
+		g.fillRect( x, y, WIDTH + 1, HEIGHT + 1 );
 
 		if( outline ) {
 			g.setColor( new Color( 200, 200, 200 ) );
-			g.drawRect( x, y, width, height );
+			g.drawRect( x, y, WIDTH, HEIGHT );
 		}
 
 		g.setColor( Color.BLACK );
-		if( topWall ) g.drawLine( x, y, x + width, y );
-		if( rightWall ) g.drawLine( x + width, y, x + width, y + height );
-		if( bottomWall ) g.drawLine( x + width, y + height, x, y + height );
-		if( leftWall ) g.drawLine( x, y + height, x, y );
+		if( topWall ) g.drawLine( x, y, x + WIDTH, y );
+		if( rightWall ) g.drawLine( x + WIDTH, y, x + WIDTH, y + HEIGHT );
+		if( bottomWall ) g.drawLine( x + WIDTH, y + HEIGHT, x, y + HEIGHT );
+		if( leftWall ) g.drawLine( x, y + HEIGHT, x, y );
 		if( sharpCorners ) {
 			g.fillRect( x, y, 1, 1 );
-			g.fillRect( x + width, y, 1, 1 );
-			g.fillRect( x, y + height, 1, 1 );
-			g.fillRect( x + width, y + height, 1, 1 );
+			g.fillRect( x + WIDTH, y, 1, 1 );
+			g.fillRect( x, y + HEIGHT, 1, 1 );
+			g.fillRect( x + WIDTH, y + HEIGHT, 1, 1 );
 		}
 
 		if( dirGoal == null && dirStart == null ) return;
@@ -134,13 +134,13 @@ class Cell implements Comparable<Cell> {
 		g.setColor( new Color( 255, 100, 0 ) );
 		g2.setStroke( new BasicStroke( 3 ) );
 		if( dirGoal == Direction.LEFT || dirStart == Direction.LEFT )
-			g.drawLine( x, y + width / 2, x + width / 2, y + width / 2 );
+			g.drawLine( x, y + HEIGHT / 2, x + WIDTH / 2, y + HEIGHT / 2 );
 		if( dirGoal == Direction.RIGHT || dirStart == Direction.RIGHT )
-			g.drawLine( x + width / 2, y + width / 2, x + width, y + width / 2 );
+			g.drawLine( x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH, y + HEIGHT / 2 );
 		if( dirGoal == Direction.UP || dirStart == Direction.UP )
-			g.drawLine( x + width / 2, y, x + width / 2, y + width / 2 );
+			g.drawLine( x + WIDTH / 2, y, x + WIDTH / 2, y + HEIGHT / 2 );
 		if( dirGoal == Direction.DOWN || dirStart == Direction.DOWN )
-			g.drawLine( x + width / 2, y + width / 2, x + width / 2, y + width );
+			g.drawLine( x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH / 2, y + HEIGHT );
 	}
 
 
