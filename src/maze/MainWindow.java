@@ -161,8 +161,18 @@ public final class MainWindow {
 
 
 	public static void main( String[] args ) {
-		// TODO: commandline arguments (row, col)
-		// TODO: check for max/min size (throw exception)
-		new MainWindow( 30, 30 );
+		try {
+			int row = 30, col = 30;
+			if( args.length >= 2 ) {
+				row = Integer.parseInt( args[ 0 ] );
+				col = Integer.parseInt( args[ 1 ] );
+				if( row < 3 || 50 < row || col < 3 || 50 < col ) {
+					throw new IllegalArgumentException();
+				}
+			}
+			new MainWindow( row, col );
+		} catch( IllegalArgumentException e ) {
+			System.out.println( "Optional command-line arguments: row col (numbers between 3 and 50)" );
+		}
 	}
 }

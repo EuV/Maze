@@ -65,9 +65,6 @@ class Field extends JPanel implements Runnable {
 	public void run() {
 		try {
 			if( fState == FState.GENERATION ) {
-				if( ROW < 3 || COL < 3 ) {
-					return;
-				}
 				RandomMazeMaker.carvePassage( this, new Position( false ) );
 				RandomMazeMaker.addExtraGates( this );
 				RandomMazeMaker.setStartAndGoal( this );
