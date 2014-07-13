@@ -84,7 +84,8 @@ class Field extends JPanel implements Runnable {
 	 * @param mapNumber the number of the map to be shown
 	 */
 	void showTestMap( int mapNumber ) {
-		if( ROW < 25 || ROW < 25 ) {
+		if( ROW < 25 || COL < 25 ) {
+			// TODO: Don't display Map 1 - Map 3 buttons in such a little maze at all
 			return;
 		}
 		if( thread.isAlive() ) {
